@@ -1,6 +1,6 @@
 import { ethers } from "hardhat";
-import { assert } from "chai";
-import { BankFactory } from "../typechain";
+import { assert, expect } from "chai";
+import { Bank, BankFactory, TellorPlayground } from "../typechain";
 
 // const UsingTellor = artifacts.require("../node_modules/usingtellor/contracts/UsingTellor.sol");
 // const TellorMaster = artifacts.require("../node_modules/usingtellor/contracts/testContracts/TellorMaster.sol");
@@ -18,10 +18,15 @@ import { BankFactory } from "../typechain";
 // Tellor Oracle
 const TELLOR_ORACLE_ADDRESS = '0xACC2d27400029904919ea54fFc0b18Bf07C57875';
 const TELLOR_REQUEST_ID = 60;
+
+let bankType; // = await ethers.getContractFactory("Bank");
+let bankFactoryType; // = await ethers.getContractFactory("BankFactory");
 let bankFactory: BankFactory;
-let bank;
+let bank: Bank;
+let owner;
 let deployer: any[];
 let alice: any;
+let tp: TellorPlayground;
 // var Bank = artifacts.require("Bank");
 // var BankFactory = artifacts.require("BankFactory");
 // var CT = artifacts.require("GLDToken");
@@ -41,12 +46,34 @@ beforeEach(async function () {   // IMPORTANT ----> No parameters for this funct
     // const DT = await ethers.getContractFactory("USDToken");
     // let ct = await CT.deploy(ethers.BigNumber.from(10000));
     // let dt = await DT.deploy(ethers.BigNumber.from(10000));
-    deployer = await ethers.getSigners();
-    alice = deployer[0];
-    const Bank = await ethers.getContractFactory("Bank");
-    const BankFactory = await ethers.getContractFactory("BankFactory");
-    bankFactory = await BankFactory.deploy();
-    bank = await Bank.deploy();
+
+    // random address from polygonscan that have a lot of usdcx
+    const USDCX_SOURCE_ADDRESS = '0xA08f80dc1759b12fdC40A4dc64562b322C418E1f';
+    const WBTC_SOURCE_ADDRESS = '0x5c2ed810328349100A66B82b78a1791B101C9D61';
+    const USDC_SOURCE_ADDRESS = '0x1a13f4ca1d028320a707d99520abfefca3998b7f';
+
+    const CARL_ADDRESS = '0x8c3bf3EB2639b2326fF937D041292dA2e79aDBbf';
+    const BOB_ADDRESS = '0x00Ce20EC71942B41F50fF566287B811bbef46DC8';
+    const ALICE_ADDRESS = '0x9f348cdD00dcD61EE7917695D2157ef6af2d7b9B';
+    const OWNER_ADDRESS = '0x3226C9EaC0379F04Ba2b1E1e1fcD52ac26309aeA';
+    let oraclePrice;
+
+    // get signers
+    owner = await ethers.provider.getSigner(OWNER_ADDRESS);
+    alice = await ethers.provider.getSigner(ALICE_ADDRESS);
+
+    // deployer = await ethers.getSigners();
+    // alice = deployer[0];
+    bankType = await ethers.getContractFactory("Bank");
+    bankFactoryType = await ethers.getContractFactory("BankFactory");
+    bankFactory = await bankFactoryType.deploy();
+    bank = await bankType.deploy();
+
+    // Deploy Tellor Oracle contracts
+
+    const TellorPlayground = await ethers.getContractFactory('TellorPlayground');
+    tp = await TellorPlayground.attach(TELLOR_ORACLE_ADDRESS);
+    tp = tp.connect(owner);
 });
 
 // contract("BankFactory", function (_accounts) {
@@ -62,7 +89,10 @@ describe("BankFactory", function () {
         let clone = await bankFactory.callStatic.createBank("Rico Bank");  // This call works here, but not inside the "it" block
         console.log("createBank() has been called");
         let owner = await bankFactory.callStatic.owner();
-        assert.equal(owner, alice);
+        // let bankClone = await Bank .at(clone.logs[0].args.newBankAddress);
+
+        // assert.typeOf(clone)
+        // assert.equal(owner, alice);
         // let clone = await bankFactory.callStatic.createBank("Rico Bank");  //, { from: alice });
     });
 });
