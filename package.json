@@ -1,5 +1,11 @@
 {
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test",
+    "build": "waffle"
+  },
   "dependencies": {
+    "@defi-wonderland/smock": "^2.0.7",
     "@openzeppelin/contracts": "^4.4.0",
     "hardhat": "^2.6.5"
   },
