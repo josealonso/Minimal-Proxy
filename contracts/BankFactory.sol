@@ -18,30 +18,33 @@ contract BankFactory is Ownable {
 
     event BankCreated(address newBankAddress, address owner);
 
-    constructor(address _bankAddress) {
-        bankAddress = _bankAddress;
+    // constructor(address _bankAddress) {
+    constructor() {
+        // bankAddress = _bankAddress;
+        bankAddress = address(new Bank());
     }
 
-    function createBank(
-        string memory name,
-        uint256 interestRate,
-        uint256 originationFee,
-        uint256 collateralizationRatio,
-        uint256 liquidationPenalty,
-        uint256 period,
-        address payable oracleAddress
-    ) public {
+    function createBank(string memory name) public // uint256 interestRate,
+    // uint256 originationFee,
+    // uint256 collateralizationRatio,
+    // uint256 liquidationPenalty,
+    // uint256 period,
+    // address payable oracleAddress
+    {
+        console.log("BankFactory.sol - Bank name: ");
+        console.log(name);
+
         address clone = Clones.clone(bankAddress);
         Bank(clone).init(
             msg.sender,
             name,
-            interestRate,
-            originationFee,
-            collateralizationRatio,
-            liquidationPenalty,
-            period,
-            owner(),
-            oracleAddress
+            // interestRate,
+            // originationFee,
+            // collateralizationRatio,
+            // liquidationPenalty,
+            // period,
+            owner()
+            // oracleAddress
         );
         BankTag memory newBankTag = BankTag(clone);
         _banks.push(newBankTag);

@@ -39,7 +39,7 @@ contract BankStorage {
     }
 
     mapping(address => Vault) public vaults;
-    Token debt;
+    Token public debt;
     Token collateral;
     Reserve reserve;
 

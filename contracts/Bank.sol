@@ -33,9 +33,9 @@ contract Bank is BankStorage, Ownable, Initializable {
     event Liquidation(address borrower, uint256 debtAmount);
 
     /*Constructor*/
-    constructor(address payable oracleContract) {
-        reserve.oracleContract = oracleContract;
-    }
+    // constructor(address payable oracleContract) {
+    //     reserve.oracleContract = oracleContract;
+    // }
 
     /**
      * @dev This function sets the fundamental parameters for the bank
@@ -44,20 +44,22 @@ contract Bank is BankStorage, Ownable, Initializable {
     function init(
         address creator,
         string memory bankName,
-        uint256 interestRate,
-        uint256 originationFee,
-        uint256 collateralizationRatio,
-        uint256 liquidationPenalty,
-        uint256 period,
-        address bankFactoryOwner,
-        address payable oracleContract
+        // uint256 interestRate,
+        // uint256 originationFee,
+        // uint256 collateralizationRatio,
+        // uint256 liquidationPenalty,
+        // uint256 period,
+        address bankFactoryOwner
+        // address payable oracleContract
     ) public initializer {
-        reserve.interestRate = interestRate;
-        reserve.originationFee = originationFee;
-        reserve.collateralizationRatio = collateralizationRatio;
-        reserve.oracleContract = oracleContract;
-        reserve.liquidationPenalty = liquidationPenalty;
-        reserve.period = period;
+        // reserve.interestRate = interestRate;
+        // reserve.originationFee = originationFee;
+        // reserve.collateralizationRatio = collateralizationRatio;
+        // reserve.oracleContract = oracleContract;
+        // reserve.liquidationPenalty = liquidationPenalty;
+        // reserve.period = period;
+        console.log(" ============= Bank.sol - Created: ");
+        console.log(bankName);
         _owner = creator; // Make the creator the first admin
         _bankFactoryOwner = bankFactoryOwner;
         name = bankName;
