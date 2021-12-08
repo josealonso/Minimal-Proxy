@@ -21,7 +21,7 @@ contract BankFactory is Ownable {
     // constructor(address _bankAddress) {
     constructor() {
         // bankAddress = _bankAddress;
-        bankAddress = address(new Bank());
+        // bankAddress = address(new Bank());
     }
 
     function createBank(string memory name) public // uint256 interestRate,
