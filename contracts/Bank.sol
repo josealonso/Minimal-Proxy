@@ -49,13 +49,13 @@ contract Bank is BankStorage, Ownable, Initializable {
         // uint256 collateralizationRatio,
         // uint256 liquidationPenalty,
         // uint256 period,
-        address bankFactoryOwner
-        // address payable oracleContract
+        address bankFactoryOwner,
+        address payable oracleContract
     ) public initializer {
         // reserve.interestRate = interestRate;
         // reserve.originationFee = originationFee;
         // reserve.collateralizationRatio = collateralizationRatio;
-        // reserve.oracleContract = oracleContract;
+        reserve.oracleContract = oracleContract;
         // reserve.liquidationPenalty = liquidationPenalty;
         // reserve.period = period;
         console.log(" ============= Bank.sol - Created: ");

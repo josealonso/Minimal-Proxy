@@ -13,7 +13,7 @@ contract BankFactory is Ownable {
         address bankAddress;
     }
 
-    address immutable public bankImplementation;
+    address public immutable bankImplementation;
     BankTag[] private _banks;
 
     event BankCreated(address newBankAddress, address owner);
@@ -23,14 +23,14 @@ contract BankFactory is Ownable {
         bankImplementation = address(new Bank());
     }
 
-    function createBank(string memory name) public 
-    // uint256 originationFee,
-    // uint256 collateralizationRatio,
-    // uint256 liquidationPenalty,
-    // uint256 period,
-    // address payable oracleAddress
-    returns (address)
-    {
+    function createBank(
+        string memory name,
+        // uint256 originationFee,
+        // uint256 collateralizationRatio,
+        // uint256 liquidationPenalty,
+        // uint256 period,
+        address payable oracleAddress
+    ) public returns (address) {
         console.log("BankFactory.sol - Bank name: ");
         console.log(name);
 
@@ -43,8 +43,8 @@ contract BankFactory is Ownable {
             // collateralizationRatio,
             // liquidationPenalty,
             // period,
-            owner()
-            // oracleAddress
+            owner(),
+            oracleAddress
         );
         BankTag memory newBankTag = BankTag(clone);
         _banks.push(newBankTag);
@@ -65,8 +65,6 @@ contract BankFactory is Ownable {
         return bank.bankAddress;
     }
 }
-
-
 
 /* OpenZeppelin example for the Clone Factory pattern
 
