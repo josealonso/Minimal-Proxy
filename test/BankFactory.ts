@@ -1,11 +1,13 @@
 import { FakeContract, smock } from "@defi-wonderland/smock";
 import { ethers } from "hardhat";
-import chai, { assert, expect, use } from "chai";
+import chai, { assert, expect, use } from "chai";    // import { chai } from "chai" does not work
+import chaiAsPromised from "chai-as-promised";
 import { Contract } from 'ethers';
 import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
 import { abi } from "../build/BankFactory.json";
 import { BankFactory, TellorPlayground } from "../typechain";
 
+chai.use(chaiAsPromised);
 use(solidity);
 
 const bankFactory = abi;
@@ -74,9 +76,9 @@ describe("BankFactory2", function () {
         const bankFactory = (await ethers.getContractFactory(
             "BankFactory",
             signers[0]
-          )); // as Counter__factory;
-          bankFactoryDeployed = await bankFactory.deploy();
-          await bankFactoryDeployed.deployed();
+        )); // as Counter__factory;
+        bankFactoryDeployed = await bankFactory.deploy();
+        await bankFactoryDeployed.deployed();
         // bankFactory = await deployContract(wallet, abi);
         // bankType = await ethers.getContractFactory("Bank");
         // bankFactoryType = await ethers.getContractFactory("BankFactory");
@@ -103,7 +105,7 @@ describe("BankFactory2", function () {
         let clone = await bankFactoryDeployed.createBank("Rico Bank");
         console.log("TS == createBank() has been called");
         // let owner = await bankFactory.callStatic.owner();
-        expect(await bankFactoryDeployed.createBank).to.have.been.calledOnce;
+        expect(await bankFactoryDeployed.createBank).to.have.been.called;
         // expect(await bankFake.init).to.have.been.calledOnce;
         // expect(bankFactory.createBank).to.have.been.calledOnce;
         // let bankClone = await 
