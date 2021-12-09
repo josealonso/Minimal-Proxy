@@ -5,7 +5,9 @@ import chaiAsPromised from "chai-as-promised";
 import { Contract } from 'ethers';
 import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
 import { abi } from "../build/BankFactory.json";
-import { BankFactory, TellorPlayground } from "../typechain";
+import { Bank, BankFactory, TellorPlayground } from "../typechain";
+import exp from "constants";
+import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 chai.use(chaiAsPromised);
 use(solidity);
@@ -20,28 +22,27 @@ const bankFactory = abi;
 //   expectRevert, // Assertions for transactions that should fail
 // } = require('@openzeppelin/test-helpers');
 
-describe("BankFactory2", function () {
+describe("BankFactory", function () {
 
     // Tellor Oracle
     const TELLOR_ORACLE_ADDRESS = '0xACC2d27400029904919ea54fFc0b18Bf07C57875';
     const TELLOR_REQUEST_ID = 60;
 
     const [wallet, walletTo] = new MockProvider().getWallets();
-    let bankType; // = await ethers.getContractFactory("Bank");
-    let bankFactoryType; // = await ethers.getContractFactory("BankFactory");
+    // let bankType; // = await ethers.getContractFactory("Bank");
+    // let bankFactoryType; // = await ethers.getContractFactory("BankFactory");
     let bankFactoryDeployed: BankFactory;
-    let bank: Contract; // Bank;
-    // let owner;
-    let deployer: any[];
-    let alice: any;
+    let bankDeployed: Bank;
     let tp: TellorPlayground;
+    let deployer: SignerWithAddress;
+    let randomUser: SignerWithAddress;
     // var Bank = artifacts.require("Bank");
     // var BankFactory = artifacts.require("BankFactory");
     // var CT = artifacts.require("GLDToken");
     // var DT = artifacts.require("USDToken");
 
-    // let bankFactoryFake: FakeContract<BankFactory>;
-    // let bankFake: FakeContract<Bank>;
+    let bankFactoryFake: FakeContract<BankFactory>;
+    let bankFake: FakeContract<Bank>;
 
     beforeEach(async function () {   // IMPORTANT ----> No parameters for this function. Otherwise, there's a executing error
         // Tellor
@@ -69,16 +70,23 @@ describe("BankFactory2", function () {
         let oraclePrice;
 
         // get signers
-        const signers = await ethers.getSigners();
+        [, deployer, randomUser] = await ethers.getSigners();
         // owner = await ethers.provider.getSigner(OWNER_ADDRESS);
         // alice = await ethers.provider.getSigner(ALICE_ADDRESS);
 
         const bankFactory = (await ethers.getContractFactory(
             "BankFactory",
-            signers[0]
+            deployer
         )); // as Counter__factory;
+        const bank = (await ethers.getContractFactory(
+            "Bank",
+            deployer
+        ));
+
         bankFactoryDeployed = await bankFactory.deploy();
         await bankFactoryDeployed.deployed();
+        bankDeployed = await bank.deploy();
+        await bankDeployed.deployed();
         // bankFactory = await deployContract(wallet, abi);
         // bankType = await ethers.getContractFactory("Bank");
         // bankFactoryType = await ethers.getContractFactory("BankFactory");
@@ -100,14 +108,34 @@ describe("BankFactory2", function () {
     const PERIOD = 86400;
     const BANK_NAME = "Test Bank";
 
+    it("should be owned by the creator", async function () {
+        let owner = await bankFactoryDeployed.owner();
+        assert.equal(owner, await deployer.getAddress());
+    });
+
+    it("should emit a BankCreated event", async function () {
+        // let clone = await bankFactoryDeployed.createBank("Rico22 Bank");
+        expect(
+            await bankFactoryDeployed.connect(randomUser).createBank("Rico33 Bank"))
+            .to.emit(bankFactoryDeployed, "BankCreated");
+            // .withArgs(deployer.getAddress(), randomUser.address);
+    });
+
     it("should create a bank clone with correct parameters", async function () {
         // let clone = await bankFactory.callStatic.createBank("Rico Bank");  
         let clone = await bankFactoryDeployed.createBank("Rico Bank");
         console.log("TS == createBank() has been called");
+        expect(bankFactoryDeployed.getNumberOfBanks()).to.have.been.called;
+        // let bankClone = await bankDeployed.at(clone.logs[0].args.newBankAddress);
+
         // let owner = await bankFactory.callStatic.owner();
-        expect(await bankFactoryDeployed.createBank).to.have.been.called;
-        // expect(await bankFake.init).to.have.been.calledOnce;
-        // expect(bankFactory.createBank).to.have.been.calledOnce;
+        // expect(clone).not.to.eq(0);            // working
+        // expect(bankFactoryDeployed.createBank).to.have.been.called;   // Not working
+        // expect(await bankFake.init).to.have.been.calledOnce;    // Error: bankFake is undefined
+        // expect(await bankDeployed.init()).to.have.been.calledOnce;   // Error: Invalid Chai property: calledOnce
+
+        // expect(await bank.mock .init).to.have.been.calledOnce; // 
+
         // let bankClone = await 
         // let bankClone = await Bank.at(clone.logs[0].args.newBankAddress);
 
@@ -169,13 +197,6 @@ describe("BankFactory2", function () {
 
     // await this.ct.transfer(_accounts[1], ether(new BN(500)));
     // await this.dt.transfer(_accounts[1], ether(new BN(500)));
-
-
-
-    // it("should be owned by the creator", async function () {
-    //     let owner = await this.bankFactory.owner();
-    //     assert.equal(owner, _accounts[0]);
-    // });
 
     // it("should create a bank multiple clones ", async function () {
     //     var clone1 = await this.bankFactory.createBank(
