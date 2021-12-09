@@ -1,26 +1,15 @@
-import { FakeContract, smock } from "@defi-wonderland/smock";
 import { ethers } from "hardhat";
 import chai, { assert, expect, use } from "chai";    // import { chai } from "chai" does not work
 import chaiAsPromised from "chai-as-promised";
-import { Contract } from 'ethers';
 import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
 import { abi } from "../build/BankFactory.json";
 import { Bank, BankFactory, TellorPlayground } from "../typechain";
-import exp from "constants";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
 chai.use(chaiAsPromised);
 use(solidity);
 
 const bankFactory = abi;
-// const {
-//   ether,
-//   time,
-//   BN,           // Big Number support
-//   constants,    // Common constants, like the zero address and largest integers
-//   expectEvent,  // Assertions for emitted events
-//   expectRevert, // Assertions for transactions that should fail
-// } = require('@openzeppelin/test-helpers');
 
 describe("BankFactory", function () {
 
@@ -36,27 +25,8 @@ describe("BankFactory", function () {
     let tp: TellorPlayground;
     let deployer: SignerWithAddress;
     let randomUser: SignerWithAddress;
-    // var Bank = artifacts.require("Bank");
-    // var BankFactory = artifacts.require("BankFactory");
-    // var CT = artifacts.require("GLDToken");
-    // var DT = artifacts.require("USDToken");
-
-    let bankFactoryFake: FakeContract<BankFactory>;
-    let bankFake: FakeContract<Bank>;
 
     beforeEach(async function () {   // IMPORTANT ----> No parameters for this function. Otherwise, there's a executing error
-        // Tellor
-        // this.oracleBase = await Tellor.new()
-        // this.oracle = await TellorMaster.new(web3.utils.toChecksumAddress(this.oracleBase.address));
-        // this.master = await new web3.eth.Contract(TellorMaster.abi,this.oracle.address);
-        // this.oa = (web3.utils.toChecksumAddress(this.oracle.address))
-        // this.oracle2 = await new web3.eth.Contract(Tellor.abi,this.oa);
-        // let alice = accounts[0];
-        // Bank set up
-        // const CT = await ethers.getContractFactory("GLDToken");
-        // const DT = await ethers.getContractFactory("USDToken");
-        // let ct = await CT.deploy(ethers.BigNumber.from(10000));
-        // let dt = await DT.deploy(ethers.BigNumber.from(10000));
 
         // random address from polygonscan that have a lot of usdcx
         const USDCX_SOURCE_ADDRESS = '0xA08f80dc1759b12fdC40A4dc64562b322C418E1f';
@@ -77,7 +47,7 @@ describe("BankFactory", function () {
         const bankFactory = (await ethers.getContractFactory(
             "BankFactory",
             deployer
-        )); // as Counter__factory;
+        ));
         const bank = (await ethers.getContractFactory(
             "Bank",
             deployer
@@ -88,19 +58,13 @@ describe("BankFactory", function () {
         bankDeployed = await bank.deploy();
         await bankDeployed.deployed();
         // bankFactory = await deployContract(wallet, abi);
-        // bankType = await ethers.getContractFactory("Bank");
-        // bankFactoryType = await ethers.getContractFactory("BankFactory");
-        // bankFactory = await bankFactoryType.deploy();
-        // bank = await bankType.deploy();
 
         // Deploy Tellor Oracle contracts
-
         const TellorPlayground = await ethers.getContractFactory('TellorPlayground');
         tp = await TellorPlayground.attach(TELLOR_ORACLE_ADDRESS);
-        // tp = tp.connect(owner);
+        tp = tp.connect(deployer);
     });
 
-    // contract("BankFactory", function (_accounts) {
     const INTEREST_RATE = 12;
     const ORIGINATION_FEE = 1;
     const COLLATERALIZATION_RATIO = 150;
@@ -114,11 +78,10 @@ describe("BankFactory", function () {
     });
 
     it("should emit a BankCreated event", async function () {
-        // let clone = await bankFactoryDeployed.createBank("Rico22 Bank");
         expect(
             await bankFactoryDeployed.connect(randomUser).createBank("Rico33 Bank"))
             .to.emit(bankFactoryDeployed, "BankCreated");
-            // .withArgs(deployer.getAddress(), randomUser.address);
+        // .withArgs(deployer.getAddress(), randomUser.address);
     });
 
     it("should create a bank clone with correct parameters", async function () {
