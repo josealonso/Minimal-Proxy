@@ -39,6 +39,24 @@ describe("BankFactory", function () {
         const OWNER_ADDRESS = '0x3226C9EaC0379F04Ba2b1E1e1fcD52ac26309aeA';
         let oraclePrice;
 
+        // Bank set up
+    // this.ct = await CT.new(ether(new BN(10000)));
+    // this.dt = await DT.new(ether(new BN(10000)));
+    // this.bank = await Bank.new(this.oracle.address);
+    // this.bankFactory = await BankFactory.new(this.bank.address);
+    // this.depositAmount = ether(new BN(100));
+    // this.largeDepositAmount = ether(new BN(5000));
+    // this.withdrawAmount = ether(new BN(50));
+    // this.borrowAmount = ether(new BN(66));
+    // this.largeBorrowAmount = ether(new BN(75));
+    // this.smallBorrowAmount = ether(new BN(30));
+    // this.two = new BN(2);
+    // this.one = new BN(1);
+    // this.zero = new BN(0);
+
+    // await this.ct.transfer(_accounts[1], ether(new BN(500)));
+    // await this.dt.transfer(_accounts[1], ether(new BN(500)));
+
         // get signers
         [, deployer, randomUser] = await ethers.getSigners();
         // owner = await ethers.provider.getSigner(OWNER_ADDRESS);
@@ -53,16 +71,16 @@ describe("BankFactory", function () {
             deployer
         ));
 
-        bankFactoryDeployed = await bankFactory.deploy();
-        await bankFactoryDeployed.deployed();
-        bankDeployed = await bank.deploy();
+        bankDeployed = await bank.deploy(TELLOR_ORACLE_ADDRESS);
         await bankDeployed.deployed();
+        bankFactoryDeployed = await bankFactory.deploy(bankDeployed.address);
+        await bankFactoryDeployed.deployed();
         // bankFactory = await deployContract(wallet, abi);
 
         // Deploy Tellor Oracle contracts
         const TellorPlayground = await ethers.getContractFactory('TellorPlayground');
-        tp = await TellorPlayground.attach(TELLOR_ORACLE_ADDRESS);
-        tp = tp.connect(deployer);
+        // tp = await TellorPlayground.attach(TELLOR_ORACLE_ADDRESS);
+        // tp = tp.connect(deployer);
     });
 
     const INTEREST_RATE = 12;
@@ -77,7 +95,7 @@ describe("BankFactory", function () {
         assert.equal(owner, await deployer.getAddress());
     });
 
-    it("should emit a BankCreated event", async function () {
+    it("should emit a BankCreated event after creating a bank", async function () {
         expect(
             await bankFactoryDeployed.connect(randomUser).createBank("Rico33 Bank", TELLOR_ORACLE_ADDRESS))
             .to.emit(bankFactoryDeployed, "BankCreated");
@@ -143,24 +161,7 @@ describe("BankFactory", function () {
 
     // bank = await Bank.deploy(TELLOR_ORACLE_ADDRESS);
 
-    // Bank set up
-    // this.ct = await CT.new(ether(new BN(10000)));
-    // this.dt = await DT.new(ether(new BN(10000)));
-    // this.bank = await Bank.new(this.oracle.address);
-    // this.bankFactory = await BankFactory.new(this.bank.address);
-    // this.depositAmount = ether(new BN(100));
-    // this.largeDepositAmount = ether(new BN(5000));
-    // this.withdrawAmount = ether(new BN(50));
-    // this.borrowAmount = ether(new BN(66));
-    // this.largeBorrowAmount = ether(new BN(75));
-    // this.smallBorrowAmount = ether(new BN(30));
-    // this.two = new BN(2);
-    // this.one = new BN(1);
-    // this.zero = new BN(0);
-
-    // await this.ct.transfer(_accounts[1], ether(new BN(500)));
-    // await this.dt.transfer(_accounts[1], ether(new BN(500)));
-
+    
     // it("should create a bank multiple clones ", async function () {
     //     var clone1 = await this.bankFactory.createBank(
     //         BANK_NAME, INTEREST_RATE, ORIGINATION_FEE, COLLATERALIZATION_RATIO, LIQUIDATION_PENALTY, PERIOD, this.oracle.address,

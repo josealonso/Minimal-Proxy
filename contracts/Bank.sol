@@ -33,9 +33,9 @@ contract Bank is BankStorage, Ownable, Initializable {
     event Liquidation(address borrower, uint256 debtAmount);
 
     /*Constructor*/
-    // constructor(address payable oracleContract) {
-    //     reserve.oracleContract = oracleContract;
-    // }
+    constructor(address payable oracleContract) {
+        reserve.oracleContract = oracleContract;
+    }
 
     /**
      * @dev This function sets the fundamental parameters for the bank

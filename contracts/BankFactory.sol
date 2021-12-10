@@ -13,14 +13,17 @@ contract BankFactory is Ownable {
         address bankAddress;
     }
 
-    address public immutable bankImplementation;
+    // string public constant ORACLE_CONTRACT = "0xACC2d27400029904919ea54fFc0b18Bf07C57875";
+    // address oracleAddress = address(ORACLE_CONTRACT);
+    // address public immutable bankImplementation;
+    address public immutable bankAddress;
     BankTag[] private _banks;
 
     event BankCreated(address newBankAddress, address owner);
 
-    constructor() {
-        // bankAddress = _bankAddress;
-        bankImplementation = address(new Bank());
+    constructor(address _bankAddress) {
+        bankAddress = _bankAddress;
+        // bankImplementation = address(new Bank(ORACLE_CONTRACT));
     }
 
     function createBank(
@@ -34,7 +37,8 @@ contract BankFactory is Ownable {
         console.log("BankFactory.sol - Bank name: ");
         console.log(name);
 
-        address clone = Clones.clone(bankImplementation);
+        // address clone = Clones.clone(bankImplementation);
+        address clone = Clones.clone(bankAddress);
         Bank(clone).init(
             msg.sender,
             name,
