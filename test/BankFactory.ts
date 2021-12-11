@@ -1,3 +1,9 @@
+const {
+    BN,           // Big Number support
+    constants,    // Common constants, like the zero address and largest integers
+    expectEvent,  // Assertions for emitted events
+    expectRevert, // Assertions for transactions that should fail
+} = require('@openzeppelin/test-helpers');
 import { ethers } from "hardhat";
 import chai, { assert, expect, use } from "chai";    // import { chai } from "chai" does not work
 import chaiAsPromised from "chai-as-promised";
@@ -17,7 +23,7 @@ describe("BankFactory", function () {
     const TELLOR_ORACLE_ADDRESS = '0xACC2d27400029904919ea54fFc0b18Bf07C57875';
     const TELLOR_REQUEST_ID = 60;
 
-    const [wallet, walletTo] = new MockProvider().getWallets();
+    // const [wallet, walletTo] = new MockProvider().getWallets();
     // let bankType; // = await ethers.getContractFactory("Bank");
     // let bankFactoryType; // = await ethers.getContractFactory("BankFactory");
     let bankFactoryDeployed: BankFactory;
@@ -26,7 +32,14 @@ describe("BankFactory", function () {
     let deployer: SignerWithAddress;
     let randomUser: SignerWithAddress;
 
-    beforeEach(async function () {   // IMPORTANT ----> No parameters for this function. Otherwise, there's a executing error
+    before(async function () {   // IMPORTANT ----> No parameters for this function. Otherwise, there's a executing error
+
+        const INTEREST_RATE = 12;
+        const ORIGINATION_FEE = 1;
+        const COLLATERALIZATION_RATIO = 150;
+        const LIQUIDATION_PENALTY = 25;
+        const PERIOD = 86400;
+        const BANK_NAME = "Test Bank";
 
         // random address from polygonscan that have a lot of usdcx
         const USDCX_SOURCE_ADDRESS = '0xA08f80dc1759b12fdC40A4dc64562b322C418E1f';
@@ -83,30 +96,59 @@ describe("BankFactory", function () {
         // tp = tp.connect(deployer);
     });
 
-    const INTEREST_RATE = 12;
-    const ORIGINATION_FEE = 1;
-    const COLLATERALIZATION_RATIO = 150;
-    const LIQUIDATION_PENALTY = 25;
-    const PERIOD = 86400;
-    const BANK_NAME = "Test Bank";
+    // beforeEach(async () => {
+    //     await evm.snapshot.revert(snapshotId);
+    //   });
+    
+    // describe('constructor', () => {
+    //     it('should set the bank address to the correct address', async () => {
+    //       expect(await bankFactoryDeployed.functions.).to.equal(bankDeployed.address);
+    //     });
+    //   });
+    
 
-    it("should be owned by the creator", async function () {
-        let owner = await bankFactoryDeployed.owner();
-        assert.equal(owner, await deployer.getAddress());
+    describe("createBank", () => {
+        it("should be owned by the creator", async function () {
+            let owner = await bankFactoryDeployed.owner();
+            assert.equal(owner, await deployer.getAddress());
+        });
+
+        it("should emit a BankCreated event", async function () {
+            expect(
+                await bankFactoryDeployed.connect(randomUser).createBank("Rico33 Bank", TELLOR_ORACLE_ADDRESS))
+                .to.emit(bankFactoryDeployed, "BankCreated");
+                // .withArgs(deployer.getAddress(), randomUser.address);
+        });
+        // event BankCreated(address newBankAddress, address owner);
+        // emit BankCreated(clone, msg.sender);
+        // let bankClone = await Bank.at(clone.logs[0].args.newBankAddress);
+        // assert.equal(bankAddress, bankClone.address); // bankAddress is the first param of the event
+        it("the new bank address should be equal to the first param of the event", async function () {
+            let clone = await bankFactoryDeployed.connect(randomUser).createBank("Rico Bank", TELLOR_ORACLE_ADDRESS);
+            // bankFactoryDeployed.
+        });
+        
+        it("should create a bank clone with correct parameters", async function () {
+            // let clone = await bankFactory.callStatic.createBank("Rico Bank");  
+            let clone = await bankFactoryDeployed.createBank("Rico Bank", TELLOR_ORACLE_ADDRESS);
+            console.log("TS == createBank() has been called");
+        });
+        
     });
 
-    it("should emit a BankCreated event after creating a bank", async function () {
-        expect(
-            await bankFactoryDeployed.connect(randomUser).createBank("Rico33 Bank", TELLOR_ORACLE_ADDRESS))
-            .to.emit(bankFactoryDeployed, "BankCreated");
-        // .withArgs(deployer.getAddress(), randomUser.address);
+    describe("getNumberOfBanks", () => {
+        it("should return the correct number", async () => {
+
+        });
     });
 
-    it("should create a bank clone with correct parameters", async function () {
-        // let clone = await bankFactory.callStatic.createBank("Rico Bank");  
-        let clone = await bankFactoryDeployed.createBank("Rico Bank", TELLOR_ORACLE_ADDRESS);
-        console.log("TS == createBank() has been called");
-        // expect(bankFactoryDeployed.getNumberOfBanks()).to.have.been.called;
+    describe("getBankAddressAtIndex", () => {
+        it("should return the correct address", async () => {
+
+        });
+    });
+});
+
         // let bankClone = await bankDeployed.at(clone.logs[0].args.newBankAddress);
 
         // let owner = await bankFactory.callStatic.owner();
@@ -115,21 +157,17 @@ describe("BankFactory", function () {
         // expect(await bankFake.init).to.have.been.calledOnce;    // Error: bankFake is undefined
         // expect(await bankDeployed.init()).to.have.been.calledOnce;   // Error: Invalid Chai property: calledOnce
 
-        // expect(await bank.mock .init).to.have.been.calledOnce; // 
-
-        // let bankClone = await 
         // let bankClone = await Bank.at(clone.logs[0].args.newBankAddress);
 
         // assert.typeOf(clone)
         // assert.equal(owner, alice);
-        // let clone = await bankFactory.callStatic.createBank("Rico Bank");  //, { from: alice });
-    });
-});
+        
         //         var clone = await this.bankFactory.createBank(
         //             BANK_NAME, INTEREST_RATE, ORIGINATION_FEE, COLLATERALIZATION_RATIO, LIQUIDATION_PENALTY, PERIOD, this.oracle.address,
         //             { "from": _accounts[1] }
         //         );
         //         let bankClone = await Bank.at(clone.logs[0].args.newBankAddress);
+        //         assert.equal(bankAddress, bankClone.address);   
 
         //         await bankClone.setCollateral(this.ct.address, 2, 1000, 1000, { "from": _accounts[1] });
         //         await bankClone.setDebt(this.dt.address, 1, 1000, 1000, { "from": _accounts[1] });
