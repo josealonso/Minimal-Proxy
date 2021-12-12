@@ -2,8 +2,10 @@ import * as dotenv from "dotenv";
 
 import { HardhatUserConfig, task } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-waffle";
+import "@nomiclabs/hardhat-waffle";   // There's no need for import "@nomiclabs/hardhat-ethers", as @nomiclabs/hardhat-waffle already does it
 import "@typechain/hardhat";
+import "@nomiclabs/hardhat-web3";    
+import "@nomiclabs/hardhat-truffle5";
 import "hardhat-gas-reporter";
 import "solidity-coverage";
 

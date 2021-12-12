@@ -4,18 +4,45 @@ const {
     expectEvent,  // Assertions for emitted events
     expectRevert, // Assertions for transactions that should fail
 } = require('@openzeppelin/test-helpers');
-import { ethers } from "hardhat";
-import chai, { assert, expect, use } from "chai";    // import { chai } from "chai" does not work
-import chaiAsPromised from "chai-as-promised";
-import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
+import Web3 from "web3";
+
 import { abi } from "../build/BankFactory.json";
+
+import { artifacts, ethers } from "hardhat";
+import chai, { assert, expect, use } from "chai";    // import { chai } from "chai" does not work
+// import chaiAsPromised from "chai-as-promised";
+import { deployContract, MockProvider, solidity } from 'ethereum-waffle';
 import { Bank, BankFactory, TellorPlayground } from "../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
+import {  } from "@nomiclabs/hardhat-ethers/signers";
+import contract from "web3/eth/contract";
+import { setupLoader } from '@openzeppelin/contract-loader';
+import { EventFilter } from "ethers";
 
-chai.use(chaiAsPromised);
-use(solidity);
+// chai.use(chaiAsPromised);  // This initialization is already handled by @nomiclabs/hardhat-waffle
+// use(solidity);
+const bankFactoryForTruffle = artifacts.require("BankFactory");
+const bankForTruffle = artifacts.require("Bank");
+const web3 = new Web3("ws://localhost:8545");
 
-const bankFactory = abi;
+// const web3Loader = setupLoader({
+//     provider: web3.eth.currentProvider,
+//     defaultGas: 2e6,
+// }).web3;
+
+// const BankFactory2 = web3Loader.fromArtifact('../build/BankFactory');
+
+// new contract("BankFactoryForTruffle", (web3Accounts: any) => {
+//     it("Should return the new greeting once it's changed", async function () {
+//       const greeter = await Greeter.new("Hello, world!");
+//       assert.equal(await greeter.greet(), "Hello, world!");
+  
+//       await greeter.setGreeting("Hola, mundo!");
+  
+//       assert.equal(await greeter.greet(), "Hola, mundo!");
+//     });
+// });
+
 
 describe("BankFactory", function () {
 
@@ -26,11 +53,13 @@ describe("BankFactory", function () {
     // const [wallet, walletTo] = new MockProvider().getWallets();
     // let bankType; // = await ethers.getContractFactory("Bank");
     // let bankFactoryType; // = await ethers.getContractFactory("BankFactory");
-    let bankFactoryDeployed: BankFactory;
-    let bankDeployed: Bank;
+    let bankFactoryInstance: BankFactory;
+    let bankInstance: Bank;
     let tp: TellorPlayground;
     let deployer: SignerWithAddress;
     let randomUser: SignerWithAddress;
+    let accounts: any[];  // for web3js
+    let eventSearched : EventFilter;
 
     before(async function () {   // IMPORTANT ----> No parameters for this function. Otherwise, there's a executing error
 
@@ -52,6 +81,8 @@ describe("BankFactory", function () {
         const OWNER_ADDRESS = '0x3226C9EaC0379F04Ba2b1E1e1fcD52ac26309aeA';
         let oraclePrice;
 
+        accounts = await web3.eth.getAccounts();    // for web3js
+    
         // Bank set up
     // this.ct = await CT.new(ether(new BN(10000)));
     // this.dt = await DT.new(ether(new BN(10000)));
@@ -84,16 +115,19 @@ describe("BankFactory", function () {
             deployer
         ));
 
-        bankDeployed = await bank.deploy(TELLOR_ORACLE_ADDRESS);
-        await bankDeployed.deployed();
-        bankFactoryDeployed = await bankFactory.deploy(bankDeployed.address);
-        await bankFactoryDeployed.deployed();
+        bankInstance = await bank.deploy(TELLOR_ORACLE_ADDRESS);
+        await bankInstance.deployed();
+        bankFactoryInstance = await bankFactory.deploy(bankInstance.address);
+        await bankFactoryInstance.deployed();
         // bankFactory = await deployContract(wallet, abi);
-
+        // const bankFactoryInWeb3 = new web3.eth.Contract(abi, bankFactoryInstance.address);
+       
         // Deploy Tellor Oracle contracts
         const TellorPlayground = await ethers.getContractFactory('TellorPlayground');
-        // tp = await TellorPlayground.attach(TELLOR_ORACLE_ADDRESS);
-        // tp = tp.connect(deployer);
+        tp = await TellorPlayground.attach(TELLOR_ORACLE_ADDRESS);
+        tp = tp.connect(deployer);
+
+        // this.emitter = await bankFactoryInstance.deployed().send();   // for web3js
     });
 
     // beforeEach(async () => {
@@ -102,60 +136,76 @@ describe("BankFactory", function () {
     
     // describe('constructor', () => {
     //     it('should set the bank address to the correct address', async () => {
-    //       expect(await bankFactoryDeployed.functions.).to.equal(bankDeployed.address);
+    //       expect(await bankFactoryInstance.functions.).to.equal(bankInstance.address);
     //     });
     //   });
     
 
     describe("createBank", () => {
-        it("should be owned by the creator", async function () {
-            let owner = await bankFactoryDeployed.owner();
+        it.skip("should be owned by the creator", async function () {
+            let owner = await bankFactoryInstance.owner();
             assert.equal(owner, await deployer.getAddress());
         });
 
         it("should emit a BankCreated event", async function () {
             expect(
-                await bankFactoryDeployed.connect(randomUser).createBank("Rico33 Bank", TELLOR_ORACLE_ADDRESS))
-                .to.emit(bankFactoryDeployed, "BankCreated");
+                await bankFactoryInstance.connect(randomUser).createBank("Rico33 Bank", TELLOR_ORACLE_ADDRESS))
+                .to.emit(bankFactoryInstance, "BankCreated");
                 // .withArgs(deployer.getAddress(), randomUser.address);
         });
-        // event BankCreated(address newBankAddress, address owner);
-        // emit BankCreated(clone, msg.sender);
-        // let bankClone = await Bank.at(clone.logs[0].args.newBankAddress);
-        // assert.equal(bankAddress, bankClone.address); // bankAddress is the first param of the event
-        it("the new bank address should be equal to the first param of the event", async function () {
-            let clone = await bankFactoryDeployed.connect(randomUser).createBank("Rico Bank", TELLOR_ORACLE_ADDRESS);
-            // bankFactoryDeployed.
+
+        it("should accept emitted events with correct bank address", async function () {    // https://github.com/ethers-io/ethers.js/issues/463
+            const bankAddress = await bankFactoryInstance.getBankAddressAtIndex(0);
+            const filter = bankFactoryInstance.filters.BankCreated();  
+            // Query the filter (the latest could be omitted)
+            const logs = bankFactoryInstance.queryFilter(filter, 19403280); // `${process.env.FORK_BLOCK_NUMBER}`); // TODO ---> error about the blocks in mainnet forking
+            (await logs).forEach((log) => {
+                console.log("new bank: " + log.args.newBankAddress + "  owner: " + log.args.owner);
+                console.log();
+                assert.equal(log.args.newBankAddress, bankAddress);
         });
-        
-        it("should create a bank clone with correct parameters", async function () {
+
+            // eventSearched = ({                     // IMP ---> new operator is not used here !!
+            //     // address: "newBankAdress",
+            //     topics : ['clone', 'msg.sender'] 
+            // });
+            // bankFactoryInstance.queryFilter(eventSearched);
+            // console.log("AAAAAAA ----- " + eventSearched.topics[0]);
+            // const truffleBankFactory = await bankFactoryForTruffle.new(bankInstance.address);  // works
+            // const truffleBank = await bankForTruffle.new(TELLOR_ORACLE_ADDRESS);
+            // let bankClone = await truffleBank.at(clone.logs[0].args.newBankAddress);
+            // let clone = await bankFactoryInstance.connect(randomUser).createBank("Rico Bank", TELLOR_ORACLE_ADDRESS);        
+            // let receipt = await BankFactory.methods.createBank("Rico4 Bank", TELLOR_ORACLE_ADDRESS).send();
+            // expectEvent(clone, "BankCreated", { newBankAddress: 0 });
+        });
+        it.skip("should create a bank clone with correct parameters", async function () {
             // let clone = await bankFactory.callStatic.createBank("Rico Bank");  
-            let clone = await bankFactoryDeployed.createBank("Rico Bank", TELLOR_ORACLE_ADDRESS);
+            let clone = await bankFactoryInstance.createBank("Rico Bank", TELLOR_ORACLE_ADDRESS);
             console.log("TS == createBank() has been called");
         });
         
     });
 
-    describe("getNumberOfBanks", () => {
+    describe.skip("getNumberOfBanks", () => {
         it("should return the correct number", async () => {
 
         });
     });
 
-    describe("getBankAddressAtIndex", () => {
+    describe.skip("getBankAddressAtIndex", () => {
         it("should return the correct address", async () => {
 
         });
     });
 });
 
-        // let bankClone = await bankDeployed.at(clone.logs[0].args.newBankAddress);
+        // let bankClone = await bankInstance.at(clone.logs[0].args.newBankAddress);
 
         // let owner = await bankFactory.callStatic.owner();
         // expect(clone).not.to.eq(0);            // working
-        // expect(bankFactoryDeployed.createBank).to.have.been.called;   // Not working
+        // expect(bankFactoryInstance.createBank).to.have.been.called;   // Not working
         // expect(await bankFake.init).to.have.been.calledOnce;    // Error: bankFake is undefined
-        // expect(await bankDeployed.init()).to.have.been.calledOnce;   // Error: Invalid Chai property: calledOnce
+        // expect(await bankInstance.init()).to.have.been.calledOnce;   // Error: Invalid Chai property: calledOnce
 
         // let bankClone = await Bank.at(clone.logs[0].args.newBankAddress);
 
