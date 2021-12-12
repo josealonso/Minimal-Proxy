@@ -73,7 +73,8 @@ contract Bank is BankStorage, Ownable, Initializable {
         uint256 collateralTokenTellorRequestId,
         uint256 collateralTokenPriceGranularity,
         uint256 collateralTokenPrice
-    ) public onlyOwner initializer {
+    ) public onlyOwner {
+        require(collateralTokenPrice > 0, "......"); // TODO
         collateral.tokenAddress = collateralToken;
         collateral.price = collateralTokenPrice;
         collateral.priceGranularity = collateralTokenPriceGranularity;
@@ -88,7 +89,8 @@ contract Bank is BankStorage, Ownable, Initializable {
         uint256 debtTokenTellorRequestId,
         uint256 debtTokenPriceGranularity,
         uint256 debtTokenPrice
-    ) public onlyOwner initializer {
+    ) public onlyOwner {
+        require(debtTokenPrice > 0, "......"); // TODO
         debt.tokenAddress = debtToken;
         debt.price = debtTokenPrice;
         debt.priceGranularity = debtTokenPriceGranularity;
@@ -144,7 +146,10 @@ contract Bank is BankStorage, Ownable, Initializable {
             msg.sender,
             amount - feeAmount
         );
-        IERC20(collateral.tokenAddress).safeTransfer(_bankFactoryOwner, feeAmount);
+        IERC20(collateral.tokenAddress).safeTransfer(
+            _bankFactoryOwner,
+            feeAmount
+        );
     }
 
     /**
@@ -203,7 +208,10 @@ contract Bank is BankStorage, Ownable, Initializable {
         reserve.collateralBalance += collateralToLiquidate - feeAmount;
         vaults[vaultOwner].collateralAmount -= collateralToLiquidate;
         vaults[vaultOwner].debtAmount = 0;
-        IERC20(collateral.tokenAddress).safeTransfer(_bankFactoryOwner, feeAmount);
+        IERC20(collateral.tokenAddress).safeTransfer(
+            _bankFactoryOwner,
+            feeAmount
+        );
         emit Liquidation(vaultOwner, debtOwned);
     }
 
@@ -330,4 +338,3 @@ contract Bank is BankStorage, Ownable, Initializable {
         return (false, 0, _time);
     }
 }
-
