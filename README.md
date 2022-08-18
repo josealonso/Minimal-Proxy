@@ -4,7 +4,7 @@ This pattern allows to create tiny clones of a given smart contract. This is ach
 
 ### IMPORTANT
 
-Although the contract clones are not upgradeable, the contracts inside **@openzeppelin/contracts-upgradeable** must be used. This is not done like that in this project, so **the Bank.sol contract is INCORRECT**.
+Although the contract clones are not upgradeable, the contracts inside **@openzeppelin/contracts-upgradeable** must be used. This is not done in this project, so **the Bank.sol contract is INCORRECT**.
 
 I'm working on a different project that uses this pattern properly.
 
